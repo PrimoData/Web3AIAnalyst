@@ -17,19 +17,18 @@ td {
 }
 
 .stButton button {
-    background-color: #F1603F;
+    background-color: blue;
     color: white;
 }
 
 .stButton button:hover {
-    background-color: #2A276C;
+    background-color: green;
     color: white;
+    border-color: green;
 }
 
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono&display=swap');
-
-html,
-body,
-[class*="css"] {
-    font-family: 'IBM Plex Mono', monospace;
+.streamlit-expanderHeader:hover,
+.css-1fcdlhc .streamlit-expanderHeader:hover svg {
+    color: blue;
+    fill: blue
 }

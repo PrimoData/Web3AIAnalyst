@@ -8,8 +8,10 @@ import json
 import re
 
 # Configure Streamlit Page
-page_icon = "https://dune.com/assets/DuneLogoCircle.svg"
-st.set_page_config(page_title="Dune AI Analyst", page_icon=page_icon, layout="wide")
+page_icon = (
+    "https://cdn.iconscout.com/icon/premium/png-256-thumb/openai-1523664-1290202.png"
+)
+st.set_page_config(page_title="Web3 AI Analyst", page_icon=page_icon, layout="wide")
 
 # Read Custom CSS
 with open("assets/css/style.css", "r") as f:
@@ -31,10 +33,14 @@ dune_api_key = os.environ["DUNE_KEY"]
 
 # Heading
 st.write(
-    f'<h1><img src="https://dune.com/assets/DuneLogoCircle.svg" alt="OpenAI logo" height="36" style="margin-bottom:6px">  Dune AI Analyst</h1>',
+    f"""<h1>
+            <img src="https://dune.com/assets/DuneLogoCircle.svg" alt="OpenAI logo" height="36" style="margin-bottom:6px">
+            <img src="https://avatars.githubusercontent.com/u/32752226?s=280&v=4" alt="OpenAI logo" height="36" style="margin-bottom:6px">              
+            Web3 AI Analyst
+        </h1>""",
     unsafe_allow_html=True,
 )
-st.subheader("Analyze any Dune dataset using natural language")
+st.subheader("Analyze any Web3 dataset using natural language")
 st.markdown(powered_by, unsafe_allow_html=True)
 
 
@@ -47,6 +53,24 @@ def query_dune(q):
     return results_df
 
 
+# Query Flipside Crypto using API
+def query_flipside(q):
+    query_api_url = f"https://api.flipsidecrypto.com/api/v2/queries/{q}/data/latest"
+    results_json = requests.get(query_api_url).json()
+    results_df = pd.DataFrame.from_dict(results_json)
+    return results_df
+
+
+def run_query(q, provider):
+    # Dictionary of provider names and their respective query functions
+    provider_query = {
+        "Flipside": query_flipside,
+        "Dune": query_dune,
+    }
+    df = provider_query[provider](q)
+    return df
+
+
 # Initialize Session State
 if "df" not in st.session_state:
     st.session_state["df"] = ""
@@ -55,10 +79,16 @@ col1, col2 = st.columns(2)
 
 # Query Dune
 with col1:
-    query = st.text_input("(1) Enter a Dune Query Id.")
+    provider = st.selectbox("(1a) Select Provider", ["Dune", "Flipside"])
+    query = st.text_input("(1b) Enter a Query Id.")
+    with st.expander("Example Query Ids:"):
+        st.write("Helium device onboards by maker (Dune, @HeliumFndn): `2470060`")
+        st.write(
+            "Helium device mints by type (Flipside, @fknmarqu): `82c8b727-2c82-45f4-a1d3-fde2ce8a3fe1`"
+        )
     submit_query = st.button("Query Data")
     if submit_query:
-        st.session_state.df = query_dune(query)
+        st.session_state.df = run_query(query, provider)
         st.table(st.session_state.df.head())
     elif isinstance(st.session_state.df, pd.DataFrame):
         st.table(st.session_state.df.head())
@@ -71,6 +101,9 @@ with col2:
 
     # Analyze Data
     question = st.text_input("(2) Ask a question or plot results.")
+    with st.expander("Example Questions:"):
+        st.code("Plot the total number of num_onboarded by maker_name.")
+        st.code("What is the total number of MINTS by DEVICE_NAME?")
     submit_question = st.button("Analyze Data")
 
     if submit_question:
